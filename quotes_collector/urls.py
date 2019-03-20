@@ -15,9 +15,15 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+
+from quotes_collector import views
 from .views import *
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('quotes/', quotes_list, name = 'quotes_list_url')
+    path('quotes/', views.quotes_list, name = 'quotes_list_url'),
+    path('quotes/get_specific', views.get_specific_quote, name = 'specific_quote_url'),
+    path('authors/', views.authors_list, name='authors_list_url'),
+    path('sources/', views.sources_list, name='sources_list_url'),
+
 ]
