@@ -22,8 +22,9 @@ from .views import *
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('quotes/', views.quotes_list, name = 'quotes_list_url'),
-    path('quotes/get_specific', views.get_specific_quote, name = 'specific_quote_url'),
+    path('quote/<int:quote_id>', views.get_specific_quote, name = 'specific_quote_url'),
     path('authors/', views.authors_list, name='authors_list_url'),
+    path('authors_quotes/<int:author_id>', views.get_quotes_by_author, name = 'authors_quotes_url'),
     path('sources/', views.sources_list, name='sources_list_url'),
-
+    path('sources_quotes/<int:source_id>', views.get_quotes_from_source, name = 'sources_quotes_url')
 ]
