@@ -3,10 +3,13 @@ from django.views.generic import View
 from .utils import ObjectDetailMixin
 
 from django.core import serializers
-from django.core.exceptions import ObjectDoesNotExist
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
+
+from django.views.decorators.csrf import csrf_exempt
+from rest_framework.parsers import JSONParser
 
 from .models import Quote
+from .serializers import QuoteSerializer
 
 
 def quotes_list(request):
@@ -44,33 +47,41 @@ def get_quotes_from_source(request, source_id):
     serialized = serializers.serialize("json", sources_quotes, indent=4)
     return HttpResponse(serialized, content_type='application/json')
 
-#
-# def create_quote(request):
-#     quote = Quote.objects.create(text=text, author=author, source=source)
+
+@csrf_exempt
+def create_quote(request):
+    if request.method == 'POST':
+        data = JSONParser().parse(request)
+        serializer = QuoteSerializer(data=data)
+        if serializer.is_valid():
+            serializer.create(data) #нужно ли вызывать create?
+            serializer.save()
+            return JsonResponse(serializer.data, status=201)
+        return JsonResponse(serializer.errors, status=400)
 
 
+@csrf_exempt
+def quote_detail(request, quote_id):
+    try:
+        quote = Quote.objects.get(pk=quote_id)
+    except Quote.DoesNotExist:
+        return HttpResponse(status=404)
 
-# def understand_what_user_wants(request_from_app):
-#     user_wants = get_type_of_request(request_from_app)
-#     if user_wants == 'save_quote':
-#         save_qoute_to_db(request_from_app)
-#     elif user_wants == "delete_all_quotes":
-#         delete_all_quotes_from_db(request_from_app)
-#     elif user_wants == 'delete_specific_quote':
-#         delete_quote_from_db(request_from_app)
-#     elif user_wants == 'delete_all_qoutes_from_book':
-#         delete_all_qoutes_from_book(request_from_app)
-#     elif user_wants == 'delete_all_qoutes_by_author':
-#         delete_all_qoutes_by_author(request_from_app)
-#     elif user_wants == 'fix_quote_text':
-#         fix_quote_text(request_from_app)
-#     elif user_wants == 'fix_book_title':
-#         fix_book_title(request_from_app)
-#     elif user_wants == 'fix_author_name':
-#         fix_author_name(request_from_app)
-#     else:
-#         send_error_messge
+    if request.method == 'GET':
+        serializer = QuoteSerializer(quote)
+        return JsonResponse(serializer.data)
 
+    elif request.method == 'PUT':
+        data = JSONParser().parse(request)
+        serializer = QuoteSerializer(quote, data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return JsonResponse(serializer.data)
+        return JsonResponse(serializer.errors, status=400)
+
+    elif request.method == 'DELETE':
+        quote.delete()
+        return HttpResponse(status=204)
 
 
 class QuoteDetail(ObjectDetailMixin, View):
